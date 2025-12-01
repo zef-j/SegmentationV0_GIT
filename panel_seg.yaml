@@ -1,0 +1,16 @@
+path: data
+
+train:
+  - solar_coco/train
+  - solar_coco2/train
+
+val:
+  - solar_coco/valid
+  - solar_coco2/valid
+
+test:
+  - solar_coco/test
+  - solar_coco2/test
+
+names:
+  0: panel
