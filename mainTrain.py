@@ -14,7 +14,7 @@ def main():
 
     # Commence prudemment, on augmentera si la VRAM le permet
     BATCH_SIZE = 16
-    WORKERS = 4
+    WORKERS = 0
 
     print(f"[INFO] Training YOLOv8 segmentation sur GPU={DEVICE}")
     print(f"       Run name : {RUN_NAME}")
