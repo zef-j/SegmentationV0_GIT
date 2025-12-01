@@ -1,52 +1,44 @@
-from pathlib import Path
 from ultralytics import YOLO
-
-# ================== CONFIG UTILISATEUR ==================
-#BASE_MODEL = "yolov8n-seg.pt"  #Nano
-BASE_MODEL = "yolov8m-seg.pt"
-DATA_YAML = "panel_seg.yaml"
-DEVICE = "mps"
-BATCH = 10
-IMG_SIZE = 640
-
-run_name = "train_modelm_1"
-RESUME_FROM = "train_modelm_1"         # run à reprendre
-
-USE_LAST_CHECKPOINT = True
-EXTRA_EPOCHS = 50
-# ========================================================
+from pathlib import Path
 
 def main():
-    runs_dir = Path("runs/segment")
+    # === PARAMÈTRES À ADAPTER FACILEMENT ===
+    RUN_NAME = "train_l4_v1"     # nom du nouveau run
+    BASE_MODEL = "yolov8m-seg.pt"  # modèle de départ
+    DATA_YAML = "panel_seg.yaml"
+    EPOCHS = 50
+    IMG_SIZE = 640
 
-    if RESUME_FROM is not None:
-        ckpt_name = "last.pt" if USE_LAST_CHECKPOINT else "best.pt"
-        ckpt_path = runs_dir / RESUME_FROM / "weights" / ckpt_name
-        if not ckpt_path.exists():
-            raise FileNotFoundError(f"Checkpoint introuvable : {ckpt_path}")
+    # GPU: 0 = premier GPU, "cuda" marche aussi
+    DEVICE = 0
 
-        print(f"[INFO] On repart de : {ckpt_path}")
-        model = YOLO(str(ckpt_path))
-        run_name = f"{RESUME_FROM}_cont"
+    # Commence prudemment, on augmentera si la VRAM le permet
+    BATCH_SIZE = 16
+    WORKERS = 4
 
+    print(f"[INFO] Training YOLOv8 segmentation sur GPU={DEVICE}")
+    print(f"       Run name : {RUN_NAME}")
+    print(f"       Model    : {BASE_MODEL}")
+    print(f"       Epochs   : {EPOCHS}, batch={BATCH_SIZE}, imgsz={IMG_SIZE}")
 
-    else:
-        print(f"[INFO] Nouveau training à partir de {BASE_MODEL}")
-        model = YOLO(BASE_MODEL)
-
-
+    model = YOLO(BASE_MODEL)
 
     model.train(
         data=DATA_YAML,
-        epochs=EXTRA_EPOCHS,
+        epochs=EPOCHS,
         imgsz=IMG_SIZE,
         device=DEVICE,
-        batch=BATCH,
-        project="runs/segment",
-        name=run_name,
-        exist_ok=True,
-        # pas de loggers=...
+        batch=BATCH_SIZE,
+        workers=WORKERS,
+        name=RUN_NAME,
+        project="runs/segment",   # dossier classique d'Ultralytics
+        cache=False,              # on pourra mettre True plus tard si le disque suit
+        amp=True,                 # mixed precision pour aller plus vite
     )
+
+    # Petit résumé
+    best = Path("runs/segment") / RUN_NAME / "weights" / "best.pt"
+    print(f"[INFO] Training terminé. Poids : {best}")
 
 if __name__ == "__main__":
     main()
